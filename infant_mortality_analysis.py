@@ -15,8 +15,8 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import GridSearchCV
 
 # Set plot style
-plt.style.use('seaborn')
-sns.set_palette('coolwarm')
+plt.style.use('seaborn-v0_8')  # Updated style name
+sns.set_theme()  # Use seaborn's default theme
 
 # =============================================================================
 # CELL 2: Data Loading and Preprocessing
@@ -214,5 +214,6 @@ joblib.dump(gbr, 'gbr_model.joblib')
 joblib.dump(scaler, 'scaler.joblib')
 joblib.dump(selected_features, 'selected_features.joblib')
 joblib.dump(top_features, 'top_features.joblib')
+joblib.dump(final_selected_features, 'final_selected_features.joblib')
 
-print("Models and scaler saved successfully!") 
+print("Models, scaler, and feature lists saved successfully!") 

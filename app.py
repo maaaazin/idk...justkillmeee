@@ -10,6 +10,10 @@ from ttkthemes import ThemedTk
 import pandas as pd
 import joblib
 
+# Set plot style
+plt.style.use('seaborn-v0_8')  # Updated style name
+sns.set_theme()  # Use seaborn's default theme
+
 class InfantMortalityPredictorApp:
     def __init__(self, root):
         self.root = root
@@ -55,10 +59,18 @@ class InfantMortalityPredictorApp:
             self.scaler = joblib.load('scaler.joblib')
             self.selected_features = joblib.load('selected_features.joblib')
             self.top_features = joblib.load('top_features.joblib')
+            self.final_selected_features = joblib.load('final_selected_features.joblib')
             
             # Load data for visualizations
             self.df = pd.read_csv("Total_Data (1).csv")
             self.df = self.df.loc[:, ~self.df.columns.str.contains('Unnamed')]
+            
+            # Calculate derived features
+            self.df['Literacy_gap'] = self.df["Men (age 15-49) who are literate4 (%)"] - self.df["Women (age 15-49) who are literate4 (%)"]
+            self.df['Nutrition_score'] = (self.df['Children under 5 years who are stunted (height-for-age)18 (%)'] + 
+                                        self.df['Children under 5 years who are underweight (weight-for-age)18 (%)']) / 2
+            
+            # Drop missing target values
             self.df_cleaned = self.df.dropna(subset=["Infant mortality rate (per 1000 live births)"])
             
             print("Models and data loaded successfully!")
@@ -236,21 +248,24 @@ class InfantMortalityPredictorApp:
             # Create input dataframe
             input_df = pd.DataFrame([input_data])
             
-            # Scale the input data
-            input_scaled = self.scaler.transform(input_df)
-            
             # Get selected model
             selected_model = self.model_var.get()
             
             # Make prediction based on selected model
             if selected_model == "Random Forest":
+                # Scale all features for RF
+                input_scaled = self.scaler.transform(input_df)
                 prediction = self.rf_model.predict(input_scaled)[0]
                 model_info = "Model used: Random Forest Regressor"
             elif selected_model == "SVR":
+                # Scale all features for SVR
+                input_scaled = self.scaler.transform(input_df)
                 prediction = self.svr_model.predict(input_scaled)[0]
                 model_info = "Model used: Support Vector Regression"
             else:  # Gradient Boosting
-                prediction = self.gbr_model.predict(input_scaled)[0]
+                # Select only the 10 features GBR was trained on (no scaling needed as per analysis script)
+                input_df_selected = input_df[self.final_selected_features]
+                prediction = self.gbr_model.predict(input_df_selected)[0]
                 model_info = "Model used: Gradient Boosting Regressor"
             
             # Display result
